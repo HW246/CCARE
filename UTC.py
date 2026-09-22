@@ -87,63 +87,6 @@ def image_linear_transform(image, scale=[2,98]):
         image[i] = (image[i]-min_)/(max_-min_+1e-7)
     return np.clip(image,0,1)
 
-def assign_superpixel_labels(segments, point_label_map, ignore_label=5):
-    """根据点标签给整个超像素赋值"""
-    label_map = np.zeros_like(segments, dtype=np.int32) + 255
-    ys, xs = np.where(point_label_map != ignore_label)
-    for y, x in zip(ys, xs):
-        sp_id = segments[y, x]
-        label_value = point_label_map[y, x]
-        label_map[segments == sp_id] = label_value
-    return label_map
-
-def filter_skeleton_by_color_intensity(img, segments, skeleton_label, point_label_map, intensity_thresh=30):
-    """
-    根据超像素内点标签亮度均值过滤骨架线
-    img: 彩色图 (H,W,3)
-    segments: 超像素分割结果 (H,W)
-    skeleton_label: 骨架线标签 (H,W)，255表示未标记区域
-    point_label_map: 点标签 (H,W)，255表示无标签
-    intensity_thresh: RGB亮度差阈值
-    """
-    filtered_skeleton = skeleton_label.copy()
-
-    # 找到所有骨架像素
-    ys, xs = np.where(skeleton_label != 255)
-    if len(ys) == 0:
-        return filtered_skeleton
-
-    skel_indices = np.ravel_multi_index((ys, xs), skeleton_label.shape)
-    skel_segments = segments[ys, xs]
-
-    # 只处理骨架线所在的超像素
-    unique_sp = np.unique(skel_segments)
-
-    for sp_id in unique_sp:
-        sp_mask = (segments == sp_id)
-
-        # 该超像素中的点标签
-        mask_point = sp_mask & (point_label_map != 255)
-        if np.sum(mask_point) == 0:
-            continue
-
-        mean_rgb = np.mean(img[mask_point], axis=0)
-
-        # 该超像素的骨架线像素
-        mask_skel = sp_mask & (skeleton_label != 255)
-        ys_skel, xs_skel = np.where(mask_skel)
-        if len(ys_skel) == 0:
-            continue
-
-        skel_rgb = img[ys_skel, xs_skel, :]
-        diff = np.linalg.norm(skel_rgb - mean_rgb, axis=1)
-
-        # 过滤掉不合格的骨架点
-        mask_invalid = diff > intensity_thresh
-        filtered_skeleton[ys_skel[mask_invalid], xs_skel[mask_invalid]] = 255
-
-    return filtered_skeleton
-
 #training dataset
 class ISPRSDataSet(data.Dataset):
     def __init__(self, root, list_path, crop_size=(512, 512), mean=IMG_MEAN, scale=False, mirror=False, ignore_label=255,set='P',id=11,mode=0):
@@ -257,10 +200,6 @@ class ISPRSDataSet(data.Dataset):
         gt1[gt1>3]=255
                 
         image_aug,gt_aug,label_aug,index  = self._rotation(image1,gt1,label1,)  
-
-        #image_aug = cv2.resize(image_aug,(256,256),interpolation=cv2.INTER_CUBIC)      
-        #label_aug = cv2.resize(label_aug,(256,256),interpolation=cv2.INTER_NEAREST)    
-        #gt_aug = cv2.resize(gt_aug,(256,256),interpolation=cv2.INTER_NEAREST) 
 
         image_aug = tf.to_tensor(image_aug)
         image_aug = image_aug.numpy()
@@ -387,10 +326,6 @@ class ISPRSFullDataSet(data.Dataset):
         gt1[gt1==255]=1
                 
         image_aug,gt_aug,label_aug  = self._rotation(image1,gt1,label1)             
-
-        #image_aug = cv2.resize(image_aug,(256,256),interpolation=cv2.INTER_CUBIC)      
-        #label_aug = cv2.resize(label_aug,(256,256),interpolation=cv2.INTER_NEAREST)    
-        #gt_aug = cv2.resize(gt_aug,(256,256),interpolation=cv2.INTER_NEAREST) 
 
         image_aug1,_ = self._augment_strong(image_aug,label_aug)
         
