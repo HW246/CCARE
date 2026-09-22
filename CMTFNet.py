@@ -450,16 +450,16 @@ class CMTFNet(nn.Module):
 
         self.backbone = backbone()
         self.decoder1 = Decoder(encode_channels, decode_channels, dropout=dropout, num_classes=num_classes,attention_mode='CA')
-        self.decoder2 = Decoder(encode_channels, decode_channels, dropout=dropout, num_classes=num_classes,attention_mode='CA')
+        self.decoder2 = Decoder(encode_channels, decode_channels, dropout=dropout, num_classes=num_classes,attention_mode='SA')
         #self.decoder3 = Decoder(encode_channels, decode_channels, dropout=dropout, num_classes=num_classes,attention_mode='CBAM')
         
     def forward(self, x):
         h, w = x.size()[-2:]
         res1, res2, res3, res4 = self.backbone(x)
         x1 = self.decoder1(res1, res2, res3, res4, h, w)
-        #x2 = self.decoder2(res1, res2, res3, res4, h, w)
+        x2 = self.decoder2(res1, res2, res3, res4, h, w)
         #x3 = self.decoder3(res1, res2, res3, res4, h, w)
-        return x1#,x2#,x3
+        return x1,x2#,x3
 
 class ColorNet(nn.Module):
     def __init__(self,num_classes=2):
