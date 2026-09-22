@@ -28,14 +28,14 @@ from models.UNetformer import UNetFormer
 from models.fcn import FCN8s
 def main():
 
-    data_root = 'J:/aaaaaaaa/exp/code1/data/ottawa/img/'
-    label_root = './data/deep/fs/'
-    ckpt = r'J:\aaaaaaaa\exp\code1\Result_ottawa\time0828_1110\ottawa_SAM_CMTFNet_batch2mF1_8547.pth'
-    txt = r'J:\aaaaaaaa\exp\code1\data\ottawa\test.txt'
+    data_root = 'path'
+    label_root = 'path'
+    ckpt = r'path'
+    txt = r'path'
     file = open(txt, 'r')
 
     num_classes=2
-    save_root = 'J:/aaaaaaaa/exp/code1/ottawa_pred/ATSG/'
+    save_root = 'path'
 
     img_paths = list(file)
     #img_paths = os.listdir(data_root)
